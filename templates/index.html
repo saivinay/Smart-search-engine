@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart File Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a2d9d6cfd4.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #eef2f7;
+            margin: 0;
+            padding: 30px;
+            color: #333;
+        }
+        h1 {
+            color: #0c4a6e;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        input[type="text"], select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            width: 260px;
+        }
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            background-color: #0c4a6e;
+            color: white;
+            font-weight: bold;
+            transition: background 0.2s ease;
+        }
+        button:hover {
+            background-color: #095a83;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th.sortable:hover {
+            cursor: pointer;
+            background-color: #e2e8f0;
+        }
+        mark {
+            background-color: #facc15;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .group {
+            margin-bottom: 12px;
+            padding-left: 20px;
+            font-size: 0.95rem;
+        }
+        a {
+            color: #0c4a6e;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .icon-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+    <script>
+        function sortTable(n) {
+            const table = document.getElementById("resultsTable");
+            let switching = true;
+            let dir = "asc";
+            let switchcount = 0;
+            while (switching) {
+                switching = false;
+                const rows = table.rows;
+                for (let i = 1; i < (rows.length - 1); i++) {
+                    let shouldSwitch = false;
+                    const x = rows[i].getElementsByTagName("TD")[n];
+                    const y = rows[i + 1].getElementsByTagName("TD")[n];
+                    const xVal = x.textContent.toLowerCase();
+                    const yVal = y.textContent.toLowerCase();
+                    if ((dir === "asc" && xVal > yVal) || (dir === "desc" && xVal < yVal)) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount === 0 && dir === "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1><i class="fas fa-search"></i> Smart File Search Engine</h1>
+
+    <form method="POST">
+        <input type="text" name="keyword" placeholder="Enter keyword" required>
+        <select name="filetype">
+            <option value="">All File Types</option>
+            <option value="pdf">PDF</option>
+            <option value="txt">Text</option>
+            <option value="docx">Word Document</option>
+        </select>
+        <button type="submit"><i class="fas fa-search"></i> Search</button>
+        {% if results %}<button onclick="window.location.href='/download_csv'" type="button"><i class="fas fa-download"></i> Download CSV</button>{% endif %}
+    </form>
+
+    {% if results %}
+    <div class="card">
+        <h2><i class="fas fa-file-alt"></i> Search Results:</h2>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortTable(0)">Filename</th>
+                    <th class="sortable" onclick="sortTable(1)">Size</th>
+                    <th class="sortable" onclick="sortTable(2)">Modified</th>
+                    <th>Snippet</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for result in results %}
+                <tr>
+                    <td><a href="{{ url_for('download_file', filename=result.filename) }}">{{ result.filename }}</a></td>
+                    <td>{{ result.size }}</td>
+                    <td>{{ result.modification_date }}</td>
+                    <td>{{ result.content_snippet | safe }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if duplicate_files %}
+    <div class="card">
+        <h2><i class="fas fa-copy"></i> Duplicate Files (Same Content):</h2>
+        {% for group in duplicate_files %}
+            <div class="group">
+                {% for file in group %}<div>{{ file }}</div>{% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if same_size_files %}
+    <div class="card">
+        <h2><i class="fas fa-compress-alt"></i> Files with Same Size:</h2>
+        {% for group in same_size_files %}
+            <div class="group">
+                {% for file in group %}<div>{{ file }}</div>{% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html>
