@@ -18,8 +18,8 @@ A powerful and extensible local file search engine built with Flask. Supports mu
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/smart-file-search.git
-   cd smart-file-search
+   git clone https://github.com/saivinay/Smart-search-engine.git
+   cd smart-search-engine
    ```
 
 2. Create and activate a virtual environment (optional but recommended):
@@ -50,7 +50,7 @@ SEARCH_DIRECTORY = '/path/to/your/files'
 ## File Structure
 
 ```
-smart-file-search/
+smart-search-engine/
 ├── backend.py           # Flask server logic
 ├── templates/
 │   └── index.html       # HTML template with search UI
